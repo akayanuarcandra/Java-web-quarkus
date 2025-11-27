@@ -1,29 +1,51 @@
 package org.acme;
 
-import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 
 @Path("/login")
 public class LoginResource {
 
+    @Inject
+    Template login;
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance getLoginPage() {
+        return login.data("title", "Login", "username", null, "error", null);
+    }
+
     @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)    // tells quarkus to expect form data
-    @Transactional // to enable transaction management
+    @Produces(MediaType.TEXT_HTML)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
     public Response login(@FormParam("username") String username, @FormParam("password") String password) {
-        User user = User.findByUsername(username);  // fetch user from database
+        User user = User.find("username", username).firstResult();
         if (user != null && user.password.equals(password)) {
-            return Response.status(Response.Status.FOUND)   // redirect to index page after successful login
-                    .location(URI.create("/index.html"))    // redirect to index page
-                    .build();   // return a 302 response
+            return Response.status(Response.Status.FOUND)
+                    .location(java.net.URI.create("/products"))
+                    .cookie(new NewCookie.Builder("username")
+                        .value(URLEncoder.encode(username, StandardCharsets.UTF_8))
+                        .path("/")
+                        .httpOnly(true)
+                        .build())
+                    .build();
         } else {
-            return Response.status(Response.Status.UNAUTHORIZED).build();   // return a 401 response
+            return Response.ok(login.data("error", "Invalid credentials", "username", null)).status(Response.Status.UNAUTHORIZED).build();
         }
     }
 }

@@ -9,14 +9,14 @@ import jakarta.persistence.Table;
 public class User extends PanacheEntity {
 
     public String username;
-    public String password;
+    public String password; // plaintext for demo only
     public String email;
 
     public static User findByUsername(String username) {
-        return find("username", username).firstResult();    // find user by username
+        return find("username", username).firstResult();
     }
 
     public static User findByUsernameAndPassword(String username, String password) {
-        return find("username = ?1 and password = ?2", username, password).firstResult();   // find user by username and password, ?1 and ?2 are placeholders for the parameters
+        return find("username = ?1 and password = ?2", username, password).firstResult();
     }
 }

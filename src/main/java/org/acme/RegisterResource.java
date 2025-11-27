@@ -1,29 +1,41 @@
 package org.acme;
 
-import java.net.URI;
-
+import io.quarkus.qute.Template;
+import io.quarkus.qute.TemplateInstance;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("/register")
 public class RegisterResource {
 
+    @Inject
+    Template register;
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance getRegisterPage() {
+        return register.data("title", "Register", "username", null);
+    }
+
     @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)    // tells quarkus to expect form data
-    @Transactional  // to enable transaction management
-    public Response register(@FormParam("username") String username, @FormParam("password") String password, @FormParam("email") String email) {
-        User user = new User(); // create a new user instance
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Transactional
+    public Response registerUser(@FormParam("username") String username, @FormParam("password") String password) {
+        if (User.find("username", username).firstResult() != null) {
+            return Response.status(Response.Status.CONFLICT).entity("Username already exists").build();
+        }
+        User user = new User();
         user.username = username;
         user.password = password;
-        user.email = email;
-        user.persist(); // save the user to the database
-        return Response.status(Response.Status.FOUND) 
-                .location(URI.create("/login.html"))    // redirect to login page after successful registration
-                .build();   // return a 302 response
+        user.persist();
+        return Response.status(Response.Status.FOUND).location(java.net.URI.create("/login")).build();
     }
 }

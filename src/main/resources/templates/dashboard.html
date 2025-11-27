@@ -1,0 +1,49 @@
+{#include base/main.html}
+{#title}Dashboard{/title}
+{#body}
+<div class="bg-white p-6 rounded-lg mb-6 shadow-md">
+    <h2 class="text-xl font-bold">Welcome to your Dashboard, {username}!</h2>
+</div>
+<div class="container mx-auto mt-10">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Product Dashboard</h1>
+        <a href="/products/new" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Add Product</a>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">ID</th>
+                    <th class="py-2 px-4 border-b">Name</th>
+                    <th class="py-2 px-4 border-b">Description</th>
+                    <th class="py-2 px-4 border-b">Price</th>
+                    <th class="py-2 px-4 border-b">Quantity</th>
+                    <th class="py-2 px-4 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {#for product in products}
+                <tr>
+                    <td class="py-2 px-4 border-b">{product.id}</td>
+                    <td class="py-2 px-4 border-b">{product.name}</td>
+                    <td class="py-2 px-4 border-b">{product.description}</td>
+                    <td class="py-2 px-4 border-b">{product.price}</td>
+                    <td class="py-2 px-4 border-b">{product.quantity}</td>
+                    <td class="py-2 px-4 border-b">
+                        <div class="flex justify-center">
+                            <a href="/products/edit/{product.id}"
+                                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">Edit</a>
+                            <form action="/products/delete/{product.id}" method="POST" class="inline">
+                                <button type="submit"
+                                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+    </div>
+</div>
+{/body}
+{/include}
