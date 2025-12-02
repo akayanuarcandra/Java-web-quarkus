@@ -28,12 +28,15 @@ public class RegisterResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response registerUser(@FormParam("username") String username, @FormParam("password") String password) {
+    public Response registerUser(@FormParam("username") String username, 
+                                 @FormParam("email") String email,
+                                 @FormParam("password") String password) {
         if (User.find("username", username).firstResult() != null) {
             return Response.status(Response.Status.CONFLICT).entity("Username already exists").build();
         }
         User user = new User();
         user.username = username;
+        user.email = email;
         user.password = password;
         user.persist();
         return Response.status(Response.Status.FOUND).location(java.net.URI.create("/login")).build();

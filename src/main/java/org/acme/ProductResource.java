@@ -32,7 +32,7 @@ public class ProductResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response products(@CookieParam("username") String username) {
-        if (username == null || username.isEmpty()) {
+        if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
         List<Product> productList = Product.listAll();
@@ -44,7 +44,7 @@ public class ProductResource {
     @Path("/new")
     @Produces(MediaType.TEXT_HTML)
     public Response newProductForm(@CookieParam("username") String username) {
-        if (username == null || username.isEmpty()) {
+        if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
         Product product = new Product();
@@ -62,7 +62,7 @@ public class ProductResource {
                                @FormParam("description") String description,
                                @FormParam("price") double price,
                                @FormParam("quantity") int quantity) {
-        if (username == null || username.isEmpty()) {
+        if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
         Product product;
@@ -86,7 +86,7 @@ public class ProductResource {
     @Path("/edit/{id}")
     @Produces(MediaType.TEXT_HTML)
     public Response editProductForm(@PathParam("id") Long id, @CookieParam("username") String username) {
-        if (username == null || username.isEmpty()) {
+        if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
         Product product = Product.findById(id);
@@ -94,11 +94,11 @@ public class ProductResource {
         return Response.ok(template).build();
     }
 
-    @GET
+    @POST
     @Path("/delete/{id}")
     @Transactional
     public Response deleteProduct(@PathParam("id") Long id, @CookieParam("username") String username) {
-        if (username == null || username.isEmpty()) {
+        if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
         Product.deleteById(id);

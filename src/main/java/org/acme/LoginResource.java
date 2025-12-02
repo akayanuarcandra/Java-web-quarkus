@@ -36,8 +36,9 @@ public class LoginResource {
     public Response login(@FormParam("username") String username, @FormParam("password") String password) {
         User user = User.find("username", username).firstResult();
         if (user != null && user.password.equals(password)) {
+            String redirectPath = username.equals("admin") ? "/products" : "/";
             return Response.status(Response.Status.FOUND)
-                    .location(java.net.URI.create("/products"))
+                    .location(java.net.URI.create(redirectPath))
                     .cookie(new NewCookie.Builder("username")
                         .value(URLEncoder.encode(username, StandardCharsets.UTF_8))
                         .path("/")
