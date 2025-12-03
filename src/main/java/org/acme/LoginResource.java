@@ -33,15 +33,20 @@ public class LoginResource {
     @Produces(MediaType.TEXT_HTML)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Transactional
-    public Response login(@FormParam("username") String username, @FormParam("password") String password) {
+    public Response login(@FormParam("username") String username, @FormParam("password") String password,
+            @FormParam("remember") String remember) {
         User user = User.find("username", username).firstResult();
         if (user != null && user.password.equals(password)) {
-            String redirectPath = username.equals("admin") ? "/products" : "/";
+            String redirectPath = username.equals("admin") ? "/dashboard" : "/";
+            boolean rememberMe = remember != null && (remember.equalsIgnoreCase("on") || remember.equalsIgnoreCase("true"));
+            // If remembered, keep cookie for 30 days; otherwise short-lived (1 hour)
+            int maxAgeSeconds = rememberMe ? 30 * 24 * 60 * 60 : 60 * 60;
             return Response.status(Response.Status.FOUND)
                     .location(java.net.URI.create(redirectPath))
                     .cookie(new NewCookie.Builder("username")
                         .value(URLEncoder.encode(username, StandardCharsets.UTF_8))
                         .path("/")
+                        .maxAge(maxAgeSeconds)
                         .httpOnly(true)
                         .build())
                     .build();

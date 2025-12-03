@@ -1,0 +1,67 @@
+{#include base/main.html}
+{#title}Cart{/title}
+{#body}
+<div class="container mx-auto mt-10">
+    <h1 class="text-3xl font-bold mb-6">Your Cart</h1>
+
+    {#if items.isEmpty()}
+    <div class="bg-white p-6 rounded shadow-md">Your cart is empty.</div>
+    {#else}
+    <div class="bg-white p-6 rounded shadow-md overflow-x-auto">
+        <table class="w-full table-auto">
+            <thead>
+                <tr class="text-left">
+                    <th class="pl-4">
+                        <button id="check-all">✓</button>
+                    </th>
+                    <th class="p-2">Image</th>
+                    <th class="p-2">Name</th>
+                    <th class="p-2">Price</th>
+                    <th class="p-2">Quantity</th>
+                    <th class="p-2">Subtotal</th>
+                    <th class="p-2"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {#for it in items}
+                <tr class="border-t">
+                    <td class="pl-4"><input type="checkbox" class="cart-check" data-id="{it.id}" checked></td>
+                    <td class="p-2 max-w-2">
+                        {#if it.imagePath}
+                        <img src="/uploads/{it.imagePath.replace(' ', '%20')}" class="w-20 h-20 object-cover rounded"
+                            alt="{it.name}">
+                        {#else}
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png"
+                            class="w-20 h-20 object-cover rounded" alt="No Image">
+                        {/if}
+                    </td>
+                    <td class="p-2">{it.name}</td>
+                    <td class="p-2">¥ {it.price}</td>
+                    <td class="p-2 max-w-6">
+                        <div class="flex items-center gap-2">
+                            <button class="qty-decr bg-gray-200 px-2 rounded-md" data-id="{it.id}">-</button>
+                            <input type="number" min="1" max="1000" step="1"
+                                class="qty-input w-12 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+                                data-id="{it.id}" value="{it.quantity}">
+                            <button class="qty-incr bg-gray-200 px-2 rounded-md" data-id="{it.id}">+</button>
+                        </div>
+                    </td>
+                    <td class="p-2">¥ <span class="subtotal" data-id="{it.id}">{it.subtotal()}</span></td>
+                    <td class="p-2 max-w-12"><button class="delete-item bg-red-500 text-white px-3 py-1 rounded"
+                            data-id="{it.id}">Delete</button></td>
+                </tr>
+                {/for}
+            </tbody>
+        </table>
+
+        <div class="mt-4 flex justify-end items-center gap-4">
+            <div class="text-xl font-bold">Total: ¥ <span id="grand-total">{total}</span></div>
+            <button id="buy-selected" class="bg-green-500 text-white px-4 py-2 rounded">Buy Selected</button>
+        </div>
+    </div>
+    {/if}
+</div>
+
+<script src="/js/cart.js"></script>
+{/body}
+{/include}

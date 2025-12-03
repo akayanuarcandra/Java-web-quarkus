@@ -1,8 +1,18 @@
 package org.acme;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+
+import io.quarkus.panache.common.Sort;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,16 +20,18 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.CookieParam;
-import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 
-@Path("/products")
+@Path("/dashboard")
 @ApplicationScoped
 public class ProductResource {
 
@@ -31,11 +43,13 @@ public class ProductResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public Response products(@CookieParam("username") String username) {
+    public Response products(@CookieParam("username") String username, @Context UriInfo uriInfo) {
+        String path = uriInfo != null ? uriInfo.getRequestUri().getPath() : "<no-uri>";
+        // Debug logging removed to keep terminal output clean
         if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
-        List<Product> productList = Product.listAll();
+        List<Product> productList = Product.listAll(Sort.by("id"));
         TemplateInstance template = dashboard.data("products", productList).data("username", username);
         return Response.ok(template).build();
     }
@@ -55,31 +69,74 @@ public class ProductResource {
     @POST
     @Path("/save")
     @Transactional
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response saveProduct(@CookieParam("username") String username,
-                               @FormParam("id") String id,
-                               @FormParam("name") String name,
-                               @FormParam("description") String description,
-                               @FormParam("price") double price,
-                               @FormParam("quantity") int quantity) {
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response saveProduct(@CookieParam("username") String username, MultipartFormDataInput input) {
         if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
-        Product product;
-        if (id != null && !id.trim().isEmpty()) {
-            product = Product.findById(Long.valueOf(id));
-            if (product == null) {
-                return Response.status(Response.Status.NOT_FOUND).build();
+
+        Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+
+        try {
+            String id = uploadForm.get("id").get(0).getBodyAsString();
+            String name = uploadForm.get("name").get(0).getBodyAsString();
+            String description = uploadForm.get("description").get(0).getBodyAsString();
+            double price = Double.parseDouble(uploadForm.get("price").get(0).getBodyAsString());
+            int quantity = Integer.parseInt(uploadForm.get("quantity").get(0).getBodyAsString());
+
+            Product product;
+            if (id != null && !id.trim().isEmpty()) {
+                product = Product.findById(Long.valueOf(id));
+                if (product == null) {
+                    return Response.status(Response.Status.NOT_FOUND).build();
+                }
+            } else {
+                product = new Product();
             }
-        } else {
-            product = new Product();
+            product.name = name;
+            product.description = description;
+            product.price = price;
+            product.quantity = quantity;
+
+            List<InputPart> inputParts = uploadForm.get("image");
+            if (inputParts != null && !inputParts.isEmpty()) {
+                InputPart inputPart = inputParts.get(0);
+                MultivaluedMap<String, String> header = inputPart.getHeaders();
+                String fileName = getFileName(header);
+                if (fileName != null && !fileName.isEmpty()) {
+                    try (InputStream inputStream = inputPart.getBody(InputStream.class, null)) {
+                        String newFileName = UUID.randomUUID().toString() + "-" + fileName;
+                        // Save uploads into source META-INF resources so Quarkus serves them at /uploads/*
+                        java.nio.file.Path uploadsDir = java.nio.file.Paths.get("src/main/resources/META-INF/resources/uploads");
+                        if (!Files.exists(uploadsDir)) {
+                            Files.createDirectories(uploadsDir);
+                        }
+                        java.nio.file.Path filePath = uploadsDir.resolve(newFileName);
+                        Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+                        product.imagePath = newFileName;
+                    }
+                }
+            }
+
+            product.persist();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle exceptions
         }
-        product.name = name;
-        product.description = description;
-        product.price = price;
-        product.quantity = quantity;
-        product.persist();
-        return Response.seeOther(URI.create("/products")).build();
+
+        return Response.seeOther(URI.create("/dashboard")).build();
+    }
+
+    private String getFileName(MultivaluedMap<String, String> header) {
+        String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
+        for (String filename : contentDisposition) {
+            if ((filename.trim().startsWith("filename"))) {
+                String[] name = filename.split("=");
+                String finalFileName = name[1].trim().replaceAll("\"", "");
+                return finalFileName;
+            }
+        }
+        return "unknown";
     }
 
     @GET
@@ -102,6 +159,8 @@ public class ProductResource {
             return Response.seeOther(URI.create("/login")).build();
         }
         Product.deleteById(id);
-        return Response.seeOther(URI.create("/products")).build();
+        return Response.seeOther(URI.create("/dashboard")).build();
     }
+
+    // Note: buy handling moved to `BuyResource` so the customer-facing product list is served at `/products`.
 }

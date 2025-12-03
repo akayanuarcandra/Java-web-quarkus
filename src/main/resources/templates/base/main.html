@@ -11,14 +11,47 @@
 <body class="bg-gray-100 text-gray-900 font-sans">
     <div class="max-w-6xl mx-auto p-6">
         <header class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold">Le Quarkus</h1>
+            <a href="/">
+                <h1 class="text-2xl font-bold">Le Quarkus</h1>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="/">Home</a>
+                <a href="/products">Products</a>
+                <a href="/cart">Cart</a>
+            </div>
             <div>
                 {#if username}
-                    <span class="mr-6">Welcome, {username}</span>
-                    <a href="/logout" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</a>
+                <div class="flex items-center">
+                    <span class="mr-1 hidden sm:inline">Welcome, {username}</span>
+                    <div class="relative inline-block ml-2">
+                        <button id="user-menu-button" type="button"
+                            onclick="var m=document.getElementById('user-menu'); m.classList.toggle('hidden'); this.setAttribute('aria-expanded', m.classList.contains('hidden') ? 'false' : 'true');"
+                            class="flex items-center p-1 rounded-full hover:bg-gray-200 focus:outline-none"
+                            aria-haspopup="true" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="8" r="5" />
+                                    <path d="M20 21a8 8 0 0 0-16 0" />
+                                </g>
+                            </svg>
+                        </button>
+
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10"
+                            aria-labelledby="user-menu-button">
+                            {#if username == 'admin'}
+                            <a href="/dashboard"
+                                class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Dashboard</a>
+                            {/if}
+                            <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
                 {#else}
-                    <a href="/login" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">Login</a>
-                    <a href="/register" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Register</a>
+                <a href="/login"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2">Login</a>
+                <a href="/register"
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Register</a>
                 {/if}
             </div>
         </header>
@@ -26,7 +59,7 @@
         {#insert body}{/insert}
 
         <footer class="mt-6 text-sm text-gray-500 bg-white p-4 rounded-lg">
-          © 2025 Le Quarkus
+            © 2025 Le Quarkus
         </footer>
     </div>
 </body>
