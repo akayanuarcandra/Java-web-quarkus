@@ -39,7 +39,6 @@ public class LoginResource {
         if (user != null && user.password.equals(password)) {
             String redirectPath = username.equals("admin") ? "/dashboard" : "/";
             boolean rememberMe = remember != null && (remember.equalsIgnoreCase("on") || remember.equalsIgnoreCase("true"));
-            // If remembered, keep cookie for 30 days; otherwise short-lived (1 hour)
             int maxAgeSeconds = rememberMe ? 30 * 24 * 60 * 60 : 60 * 60;
             return Response.status(Response.Status.FOUND)
                     .location(java.net.URI.create(redirectPath))

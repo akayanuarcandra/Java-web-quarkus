@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Product extends PanacheEntityBase {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
@@ -18,5 +17,4 @@ public class Product extends PanacheEntityBase {
     public double price;
     public int quantity;
     public String imagePath;
-
 }

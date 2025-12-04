@@ -45,7 +45,6 @@ public class ProductResource {
     @Produces(MediaType.TEXT_HTML)
     public Response products(@CookieParam("username") String username, @Context UriInfo uriInfo) {
         String path = uriInfo != null ? uriInfo.getRequestUri().getPath() : "<no-uri>";
-        // Debug logging removed to keep terminal output clean
         if (username == null || !username.equals("admin")) {
             return Response.seeOther(URI.create("/login")).build();
         }
@@ -161,6 +160,4 @@ public class ProductResource {
         Product.deleteById(id);
         return Response.seeOther(URI.create("/dashboard")).build();
     }
-
-    // Note: buy handling moved to `BuyResource` so the customer-facing product list is served at `/products`.
 }
